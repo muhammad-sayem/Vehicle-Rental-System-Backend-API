@@ -1,8 +1,8 @@
 import { pool } from "../../config/db"
 
 // Create Vehicle //
-const createVehicle = async(payload: Record<string, unknown>) => {
-  const {vehicle_name, type, registration_number, daily_rent_price, availability_status} = payload;
+const createVehicle = async (payload: Record<string, unknown>) => {
+  const { vehicle_name, type, registration_number, daily_rent_price, availability_status } = payload;
 
   const result = await pool.query(`INSERT INTO vehicles (vehicle_name, type, registration_number, daily_rent_price, availability_status) VALUES($1, $2, $3, $4, $5) RETURNING *`, [vehicle_name, type, registration_number, daily_rent_price, availability_status]);
 
@@ -10,29 +10,46 @@ const createVehicle = async(payload: Record<string, unknown>) => {
 }
 
 // Get all vehicles //
-const getAllVehicles = async() => {
+const getAllVehicles = async () => {
   const result = await pool.query(`SELECT * FROM vehicles`);
   return result;
 }
 
 // Get Single Vehicle //
-const getSingleVehicle = async(id: string) => {
+const getSingleVehicle = async (id: string) => {
   const result = await pool.query(`SELECT * FROM vehicles WHERE id=$1`, [id]);
   return result;
 }
 
 // Update Vehicle //
-const updateVehicle = async(payload: Record<string, unknown>) => {
-  const {vehicle_name, type, registration_number, daily_rent_price, availability_status, id} = payload;
+const updateVehicle = async (payload: Record<string, unknown>) => {
+  const { vehicle_name, type, registration_number, daily_rent_price, availability_status, id } = payload;
   const result = await pool.query(`UPDATE vehicles SET vehicle_name=$1, type=$2, registration_number=$3, daily_rent_price=$4, availability_status=$5 WHERE id=$6 RETURNING *`, [vehicle_name, type, registration_number, daily_rent_price, availability_status, id]);
 
   return result;
 }
 
-// Delete Vehicle //
-const deleteVehicle = async(id: string) => {
-  const result = await pool.query(`DELETE FROM vehicles WHERE id=$1`, [id]);
+// Update Vehicle Status //
+const updateVehicleStatus = async (id: string) => {
+  const result = await pool.query(`UPDATE vehicles SET availability_status=$1 WHERE id=$2 RETURNING *`, ["booked", id]);
+
   return result;
+}
+
+// Delete Vehicle //
+const deleteVehicle = async (id: string) => {
+  const vehicleExistsInBookingCheck = await pool.query(`SELECT * FROM bookings WHERE vehicle_id=$1`, [id]);
+
+  if (vehicleExistsInBookingCheck.rows.length === 0) {
+    const result = await pool.query(`DELETE FROM vehicles WHERE id=$1`, [id]);
+    return result;
+  }
+
+  else{
+    throw new Error("Can't delete because the car is booked")
+  }
+
+
 }
 
 
@@ -42,5 +59,6 @@ export const vehicleServices = {
   getAllVehicles,
   getSingleVehicle,
   updateVehicle,
+  updateVehicleStatus,
   deleteVehicle
 }

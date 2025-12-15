@@ -18,17 +18,25 @@ const getAllUsers = async () => {
 }
 
 // Get Single User //
-const getSingleUser = async(id: string) => {
+const getSingleUser = async (id: string) => {
   const result = await pool.query(`SELECT * FROM users WHERE id=$1`, [id]);
   return result;
 }
 
 // Update user //
-const updateUser = async (payload: Record<string, unknown>) => {
+const updateUser = async (payload: Record<string, unknown>, userRole: string) => {
   const { name, email, phone, role, id } = payload;
-  const result = await pool.query(`UPDATE users SET name=$1, email=$2, phone=$3, role=$4 WHERE id=$5 RETURNING *`, [name, email, phone, role, id]);
 
-  return result;
+  if (userRole === "admin") {
+    const result = await pool.query(`UPDATE users SET name=$1, email=$2, phone=$3, role=$4 WHERE id=$5 RETURNING *`, [name, email, phone, role, id]);
+    return result;
+  }
+
+  if(userRole === "customer") {
+    const result = await pool.query(`UPDATE users SET name=$1, email=$2, phone=$3 WHERE id=$4 RETURNING *`, [name, email, phone, id]);
+    return result;
+  }
+
 }
 
 // Delete User //

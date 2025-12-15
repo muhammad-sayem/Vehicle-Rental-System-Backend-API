@@ -69,7 +69,7 @@ const getSingleVehicle = async (req: Request, res: Response) => {
   }
 }
 
-// Update Vehicles //
+// Update Vehicle //
 const updateVehicle = async (req: Request, res: Response) => {
   const id = req.params.id;
   const payload = { ...req.body, id };
@@ -100,13 +100,20 @@ const updateVehicle = async (req: Request, res: Response) => {
   }
 }
 
+// Update Vehicle Status //
+const updateVehicleStatus = async (req: Request, res: Response) => {
+  const result = await vehicleServices.updateVehicleStatus(req.params.id as string);
+  return result;
+}
+
 // Delete Vehicle //
 const deleteVehicle = async (req: Request, res: Response) => {
-  const id = req.params.id;
-  const result = await vehicleServices.deleteVehicle(id as string);
-  console.log("Vehicle result console", result);
 
   try {
+    const id = req.params.id;
+    const result = await vehicleServices.deleteVehicle(id as string);
+    console.log("Vehicle result console", result);
+
     if (result.rowCount === 0) {
       res.status(404).json({
         success: false,
@@ -134,5 +141,6 @@ export const vehicleControllers = {
   getAllVehicles,
   getSingleVehicle,
   updateVehicle,
+  updateVehicleStatus,
   deleteVehicle
 }

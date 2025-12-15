@@ -85,6 +85,7 @@ const updateUser = async (req: Request, res: Response) => {
   const id = req.params.id;
   const payload = { ...req.body, id };
   const loggedInUser: any = req.user;
+
   // console.log({loggedInUser});
   if (loggedInUser.role === "customer" && String(loggedInUser.id) !== String(id)) {
     return res.status(403).json({
@@ -94,10 +95,17 @@ const updateUser = async (req: Request, res: Response) => {
   }
 
   try {
-    const result = await userServices.updateUser(payload);
+    const userRole = loggedInUser.role;
+
+    const isAdmin: boolean = userRole === "admin" ? true : false;
+    if(!isAdmin){
+      delete payload.role;
+    }
+
+    const result = await userServices.updateUser(payload, userRole);
     console.log("user result console", result);
 
-    if (result.rows.length === 0) {
+    if (result?.rows.length === 0) {
       res.status(404).json({
         success: false,
         message: "User Not Found"
@@ -105,7 +113,7 @@ const updateUser = async (req: Request, res: Response) => {
     }
 
     else {
-      const user = result.rows[0];
+      const user = result?.rows[0];
       // console.log("User update console", user);
       delete user.password;
 

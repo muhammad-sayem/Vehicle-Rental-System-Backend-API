@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { bookingService } from "./booking.service";
+import { vehicleServices } from "../vehicle/vehicle.service";
 
 const createBooking = async (req: Request, res: Response) => {
   try {
@@ -7,6 +8,7 @@ const createBooking = async (req: Request, res: Response) => {
     console.log("Booking Created", result.result);
     const bookingData = result.result.rows[0];
     const vehicleData = result.vehicle;
+    const vehicleId = vehicleData.id;
 
     // customer_id, vehicle_id, rent_start_date, rent_end_date
     const resposneData = {
@@ -23,6 +25,8 @@ const createBooking = async (req: Request, res: Response) => {
       }
     }
 
+    const updateVehicleStatus = await vehicleServices.updateVehicleStatus(vehicleId);
+
     res.status(201).json({
       success: true,
       message: "Booking created successfully",
@@ -33,15 +37,21 @@ const createBooking = async (req: Request, res: Response) => {
   catch (error: any) {
     res.status(400).json({
       success: false,
-      message: "Booking created successfully",
+      message: "Something went wrong",
       data: error.message
     })
   }
 }
 
 const getAllBookings = async (req: Request, res: Response) => {
+  const loggedInUser: any = req.user;
+  console.log({ loggedInUser });
+  const userRole = loggedInUser.role;
+  const userId = loggedInUser.id;
+
   try {
-    const result = await bookingService.getAllBookings();
+    const result = await bookingService.getAllBookings(userRole, userId);
+    console.log("Getting all books", result);
 
     res.status(200).json({
       success: true,
@@ -58,25 +68,37 @@ const getAllBookings = async (req: Request, res: Response) => {
 };
 
 const updateBooking = async (req: Request, res: Response) => {
-  const id = req.params.id;
-  const payload = { ...req.body, id };
+  const bookingId = req.params.id;
+  const { status } = req.body;
+  const loggedInUser: any = req.user;
+
+  const payload = { bookingId, status, loggedInUserId: loggedInUser.id, loggedInUserRole: loggedInUser.role };
 
   try {
-    const result = await bookingService.updateBooking(payload);
+    const result = await bookingService.updateBooking(payload) as { booking: any, vehicle: any };
     console.log(result);
 
-    if (result.rows.length === 0) {
-      res.status(404).json({
-        success: false,
-        message: "Booking not found"
-      })
-    }
-    else {
-      res.status(200).json({
-        success: true,
-        message: "Booking cancelled successfully"
-      })
-    }
+    const responseMessage = loggedInUser.role === "admin" ? "Booking marked as returned. Vehicle is now available" : "Booking cancelled successfully";
+
+    const responseData = loggedInUser.role == "admin" ? {
+        booking: {
+          ...result?.booking,
+          vehicle: {
+            availability_status: result.vehicle.availability_status
+          }
+        },
+      } :
+      {
+        booking: {
+          ...result?.booking,
+        },
+      }
+
+    res.status(200).json({
+      success: true,
+      message: responseMessage,
+      data: responseData
+    })
   }
 
   catch (error: any) {
@@ -85,13 +107,11 @@ const updateBooking = async (req: Request, res: Response) => {
       message: error.message
     })
   }
-
-
 }
 
 const getBookingsForSpecificCustomer = async (req: Request, res: Response) => {
   const id = req.params.customer_id;
-  
+
   try {
     const result = await bookingService.getBookingsForSpecificCustomer(id as string);
     console.log(result);
