@@ -22,4 +22,4 @@ TypeScript, node.js, express.js, postgreSQL, JWT
     CONNECTION_STR=*********************
     JWT_SECRET="*****************"
 * Run command "npm run dev"
-* Open postman and test the API's
+* Open postman and test API's

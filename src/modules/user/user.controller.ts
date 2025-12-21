@@ -2,27 +2,27 @@ import { Request, Response } from "express";
 import { userServices } from "./user.service";
 import { bookingService } from "../booking/booking.service";
 
-const createUser = async (req: Request, res: Response) => {
-  try {
-    const result = await userServices.createUser(req.body);
-    console.log("User Info", req.body);
+// const createUser = async (req: Request, res: Response) => {
+//   try {
+//     const result = await userServices.createUser(req.body);
+//     console.log("User Info", req.body);
 
-    const user = result.rows[0];
-    delete user.password;
+//     const user = result.rows[0];
+//     delete user.password;
 
-    res.status(201).json({
-      success: true,
-      message: "User registered successfully",
-      data: user
-    })
-  }
-  catch (error: any) {
-    res.status(400).json({
-      success: false,
-      message: error.message
-    })
-  }
-}
+//     res.status(201).json({
+//       success: true,
+//       message: "User registered successfully",
+//       data: user
+//     })
+//   }
+//   catch (error: any) {
+//     res.status(400).json({
+//       success: false,
+//       message: error.message
+//     })
+//   }
+// }
 
 const getAllUsers = async (req: Request, res: Response) => {
   try {
@@ -175,7 +175,7 @@ const deleteUser = async (req: Request, res: Response) => {
 }
 
 export const userControllers = {
-  createUser,
+  // createUser,
   getAllUsers,
   getSingleUser,
   updateUser,
